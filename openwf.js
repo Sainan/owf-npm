@@ -37,6 +37,7 @@ switch (tool) {
 					break;
 				}
 				console.log("Refreshing versions list...");
+				await fs.promises.unlink("manifests/versions.html");
 				versions = await getVersions();
 				isFresh = true;
 			}

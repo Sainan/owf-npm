@@ -16,7 +16,7 @@ switch (tool) {
 			}
 
 			const fs = require("node:fs");
-			const { getVersions, getVersionType, getShortId, downloadSingleFileWebseededTorrent, downloadFile } = require("./lib.js");
+			const { getVersions, getVersionType, getShortId, downloadFile, downloadUpdatePatch } = require("./lib.js");
 
 			let isFresh = !fs.existsSync("manifests/versions.html");
 			if (isFresh) {
@@ -96,7 +96,7 @@ switch (tool) {
 			}
 			if (type == "patch") {
 				console.log("Fetching update patch...");
-				const patchArchivePath = await downloadSingleFileWebseededTorrent(version.attributes.magnet, btConsent);
+				const patchArchivePath = await downloadUpdatePatch(version, btConsent);
 
 				console.log("Applying update patch...");
 				const sz = require("7zip-min");

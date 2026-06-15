@@ -19,6 +19,7 @@ const getVersions = async () => {
 	}
 	return versions;
 };
+
 const getVersionType = (version) => {
 	if (version.attributes.magnet) {
 		if (version.attributes.base_manifest) {
@@ -34,6 +35,7 @@ const getVersionType = (version) => {
 		return "steam";
 	}
 };
+
 const getShortId = (version) => {
 	if (!version.attributes.magnet) {
 		return version.near + "-steam";
@@ -47,16 +49,23 @@ const downloadFile = async (url, out) => {
 	await fs.promises.writeFile(out, Readable.fromWeb(body));
 };
 
-let WebTorrent;
-const downloadSingleFileWebseededTorrent = async (magnetUri, btConsent) => {
-	const params = new URLSearchParams(new URL(magnetUri).search);
+const downloadFileFromMega = async (url, out) => {
+	const { File } = await import("megajs");
+	const file = File.fromURL(url);
+	await file.loadAttributes();
+	//console.log(`Downloading ${file.name}...`);
+	const data = await file.downloadBuffer();
+	await fs.promises.writeFile(out, data);
+};
+
+const downloadUpdatePatch = async (version, btConsent) => {
+	const params = new URLSearchParams(new URL(version.attributes.magnet).search);
 	if (btConsent) {
-		if (!WebTorrent) {
-			WebTorrent = (await import("webtorrent")).default;
-		}
+		// TODO: If file already exists, verify integrity via .torrent first (just because we can do P2P doesn't mean we have to or should)
+		const WebTorrent = (await import("webtorrent")).default;
 		return new Promise(resolve => {
 			const client = new WebTorrent();
-			client.add(magnetUri, { path: "depot" }, torrent => {
+			client.add(version.attributes.magnet, { path: "depot" }, torrent => {
 				torrent.on("done", () => {
 					client.destroy();
 					resolve(`depot/${params.get("dn")}`);
@@ -66,15 +75,12 @@ const downloadSingleFileWebseededTorrent = async (magnetUri, btConsent) => {
 	} else {
 		if (!fs.existsSync(`depot/${params.get("dn")}`)) {
 			await fs.promises.mkdir("depot", { recursive: true });
-			await downloadFile(params.get("ws"), `depot/${params.get("dn")}`);
+			//await downloadFile(params.get("ws"), `depot/${params.get("dn")}`);
+			await downloadFileFromMega(version.attributes.mega, `depot/${params.get("dn")}`);
 		}
-		// TODO: Use mega download because it's faster and more consistent than archive.org
 		// TODO: Verify integrity via .torrent
 		return `depot/${params.get("dn")}`;
 	}
 };
-/*const downloadMultiFileWebseededTorrent = (magnetUri, torrentFileUrl, btConsent) => {
-	// TODO
-};*/
 
-module.exports = { getVersions, getVersionType, getShortId, downloadFile, downloadSingleFileWebseededTorrent, /*downloadMultiFileWebseededTorrent*/ };
+module.exports = { getVersions, getVersionType, getShortId, downloadFile, downloadFileFromMega, downloadUpdatePatch };

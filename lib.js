@@ -58,29 +58,59 @@ const downloadFileFromMega = async (url, out) => {
 	await fs.promises.writeFile(out, data);
 };
 
-const downloadUpdatePatch = async (version, btConsent) => {
-	const params = new URLSearchParams(new URL(version.attributes.magnet).search);
-	if (btConsent) {
-		// TODO: If file already exists, verify integrity via .torrent first (just because we can do P2P doesn't mean we have to or should)
-		const WebTorrent = (await import("webtorrent")).default;
-		return new Promise(resolve => {
-			const client = new WebTorrent();
-			client.add(version.attributes.magnet, { path: "depot" }, torrent => {
-				torrent.on("done", () => {
-					client.destroy();
-					resolve(`depot/${params.get("dn")}`);
-				});
+// For single-file torrents, downloadDir is the folder that contains the file.
+const verifyLocalTorrentDownload = (torrentFilePath, downloadDir) => {
+	return new Promise(resolve => {
+		const nt = require("nt");
+		nt.read(torrentFilePath, (_err, torrent) => {
+			const hasher = torrent.hashCheck(downloadDir);
+			let p;
+			hasher.on("match", (i, hash, percent) => {
+				p = percent;
+			});
+			hasher.on("end", () => {
+				resolve(p == 100);
 			});
 		});
-	} else {
-		if (!fs.existsSync(`depot/${params.get("dn")}`)) {
-			await fs.promises.mkdir("depot", { recursive: true });
-			//await downloadFile(params.get("ws"), `depot/${params.get("dn")}`);
-			await downloadFileFromMega(version.attributes.mega, `depot/${params.get("dn")}`);
+	});
+};
+
+const downloadUpdatePatch = async (version, btConsent) => {
+	const params = new URLSearchParams(new URL(version.attributes.magnet).search);
+	const torrentFilePath = `depot/${params.get("dn")}.torrent`;
+	if (!fs.existsSync(torrentFilePath)) {
+		const torrentFileUrl = `https://about.openwf.io/supplementals/torrents/patches/${params.get("dn")}.torrent`;
+		await fs.promises.mkdir("depot", { recursive: true });
+		await downloadFile(torrentFileUrl, torrentFilePath);
+	}
+	let needToDownload = !fs.existsSync(`depot/${params.get("dn")}`);
+	while (true) {
+		if (needToDownload) {
+			if (btConsent) {
+				const WebTorrent = (await import("webtorrent")).default;
+				await new Promise(resolve => {
+					const client = new WebTorrent();
+					client.add(torrentFilePath, { path: "depot" }, torrent => {
+						torrent.on("done", () => {
+							client.destroy();
+							resolve(`depot/${params.get("dn")}`);
+						});
+					});
+				});
+			} else {
+				//await downloadFile(params.get("ws"), `depot/${params.get("dn")}`);
+				await downloadFileFromMega(version.attributes.mega, `depot/${params.get("dn")}`);
+			}
 		}
-		// TODO: Verify integrity via .torrent
-		return `depot/${params.get("dn")}`;
+		if (await verifyLocalTorrentDownload(torrentFilePath, "depot")) {
+			return `depot/${params.get("dn")}`;
+		}
+		if (needToDownload) {
+			// This was a fresh download, no point in retrying.
+			throw new Error(`Failed to download ${magnetUri}`);
+		}
+		needToDownload = true;
 	}
 };
 
-module.exports = { getVersions, getVersionType, getShortId, downloadFile, downloadFileFromMega, downloadUpdatePatch };
+module.exports = { getVersions, getVersionType, getShortId, downloadFile, downloadFileFromMega, verifyLocalTorrentDownload, downloadUpdatePatch };

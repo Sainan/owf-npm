@@ -13,6 +13,7 @@
 		"7zip-min": "^3.0.1",
 		"lean-and-mean-steam-user": "^0.1.0",
 		"megajs": "^1.3.10",
+		"nt": "^0.7.1",
 		"steam-manifest-tools": "^0.1.11",
 		"webtorrent": "^2.3.0",
 		"yesno": "^0.4.0"

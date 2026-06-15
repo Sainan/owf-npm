@@ -1,5 +1,5 @@
 {
-	"name": "openwf",
+	"name": "@openwf/cli",
 	"version": "0.1.0",
 	"main": "lib.js",
 	"repository": {

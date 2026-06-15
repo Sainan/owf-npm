@@ -107,7 +107,7 @@ const downloadUpdatePatch = async (version, btConsent) => {
 		}
 		if (needToDownload) {
 			// This was a fresh download, no point in retrying.
-			throw new Error(`Failed to download ${magnetUri}`);
+			throw new Error(`Failed to download ${version.attributes.mega}`);
 		}
 		needToDownload = true;
 	}

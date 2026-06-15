@@ -12,10 +12,8 @@
 	"dependencies": {
 		"7zip-min": "^3.0.1",
 		"lean-and-mean-steam-user": "^0.1.0",
-		"steam-manifest-tools": "^0.1.11"
-	},
-	"devDependencies": {
-		"webtorrent": "^3.0.16",
+		"steam-manifest-tools": "^0.1.11",
+		"webtorrent": "^2.3.0",
 		"yesno": "^0.4.0"
 	}
 }

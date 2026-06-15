@@ -50,7 +50,7 @@ const downloadFile = async (url, out) => {
 let WebTorrent;
 const downloadSingleFileWebseededTorrent = async (magnetUri, btConsent) => {
 	const params = new URLSearchParams(new URL(magnetUri).search);
-	/*if (btConsent) {
+	if (btConsent) {
 		if (!WebTorrent) {
 			WebTorrent = (await import("webtorrent")).default;
 		}
@@ -63,12 +63,13 @@ const downloadSingleFileWebseededTorrent = async (magnetUri, btConsent) => {
 				});
 			});
 		});
-	} else*/ {
-		if (fs.existsSync(`depot/${params.get("dn")}`)) {
-			// TODO: Verify integrity?
-		} else {
+	} else {
+		if (!fs.existsSync(`depot/${params.get("dn")}`)) {
+			await fs.promises.mkdir("depot", { recursive: true });
 			await downloadFile(params.get("ws"), `depot/${params.get("dn")}`);
 		}
+		// TODO: Use mega download because it's faster and more consistent than archive.org
+		// TODO: Verify integrity via .torrent
 		return `depot/${params.get("dn")}`;
 	}
 };

@@ -48,13 +48,13 @@ switch (tool) {
 			const type = getVersionType(version);
 
 			let btConsent = false;
-			/*if (type != "steam") {
+			if (type != "steam") {
 				const yesno = require("yesno");
 				btConsent = await yesno({
 					question: "Would it be okay to use peer-to-peer networking (BitTorrent) for faster downloads? [Y/n]",
 					defaultValue: true
 				})
-			}*/
+			}
 
 			if (type == "steam" || type == "patch") {
 				const ContentManifest = require("lean-and-mean-steam-user/components/content_manifest");

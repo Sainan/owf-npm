@@ -61,7 +61,7 @@ switch (tool) {
 				const { fetchManifest, fetchDepotKey, downloadAndInstall, DEFAULT_HOSTS }  = require("steam-manifest-tools");
 
 				console.log(`Fetching manifest...`);
-				const manifestId = type == "patch" ? version.attributes.base_manifest_id : version.id;
+				const manifestId = type == "patch" ? version.attributes.base_manifest : version.id;
 				const manifest = ContentManifest.parse(await fetchManifest("230411", manifestId));
 
 				console.log(`Fetching depot key...`);

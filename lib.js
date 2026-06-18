@@ -59,10 +59,13 @@ const downloadFileFromMega = async (url, out) => {
 };
 
 // For single-file torrents, downloadDir is the folder that contains the file.
-const verifyLocalTorrentDownload = (torrentFilePath, downloadDir) => {
+const verifyLocalTorrentDownload = (torrentFilePath, downloadDir, infoHash) => {
 	return new Promise(resolve => {
 		const nt = require("nt");
 		nt.read(torrentFilePath, (_err, torrent) => {
+			if (infoHash && torrent.infoHash() != infoHash) {
+				throw new Error(`${torrentFilePath} does not seem to match infohash ${infoHash}`);
+			}
 			const hasher = torrent.hashCheck(downloadDir);
 			let p;
 			hasher.on("match", (i, hash, percent) => {
@@ -77,6 +80,7 @@ const verifyLocalTorrentDownload = (torrentFilePath, downloadDir) => {
 
 const downloadUpdatePatch = async (version, btConsent) => {
 	const params = new URLSearchParams(new URL(version.attributes.magnet).search);
+	const infoHash = params.get("xt").substring(9);
 	const torrentFilePath = `depot/${params.get("dn")}.torrent`;
 	if (!fs.existsSync(torrentFilePath)) {
 		const torrentFileUrl = `https://about.openwf.io/supplementals/torrents/patches/${params.get("dn")}.torrent`;
@@ -102,13 +106,14 @@ const downloadUpdatePatch = async (version, btConsent) => {
 				await downloadFileFromMega(version.attributes.mega, `depot/${params.get("dn")}`);
 			}
 		}
-		if (await verifyLocalTorrentDownload(torrentFilePath, "depot")) {
+		if (await verifyLocalTorrentDownload(torrentFilePath, "depot", infoHash)) {
 			return `depot/${params.get("dn")}`;
 		}
 		if (needToDownload) {
 			// This was a fresh download, no point in retrying.
 			throw new Error(`Failed to download ${version.attributes.mega}`);
 		}
+		//console.log("File is locally available but failed to verify against .torrent");
 		needToDownload = true;
 	}
 };

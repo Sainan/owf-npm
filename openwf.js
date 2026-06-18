@@ -100,7 +100,21 @@ switch (tool) {
 
 				console.log("Applying update patch...");
 				const sz = require("7zip-min");
-				await sz.unpackSome(patchArchivePath, [target], "install");
+				if (patchArchivePath.endsWith(".wim.7z")) {
+					await sz.unpack(patchArchivePath, "depot");
+					const wimPath = patchArchivePath.substr(0, patchArchivePath.length - 3);
+					{
+						const { Wim } = require("wim-parser");
+						const wim = await Wim.open(wimPath);
+						const root = await wim.getRootDirectoryEntry();
+						const targetDir = (await wim.listDirectory(root)).find(entry => entry.file_name == target);
+						await wim.extract(targetDir, `install/${target}`);
+						await wim.close();
+					}
+					await fs.promises.unlink(wimPath);
+				} else {
+					await sz.unpackSome(patchArchivePath, [target], "install");
+				}
 			}
 			if (tool == "install") {
 				console.log("Downloading Bootstrapper manifest...");

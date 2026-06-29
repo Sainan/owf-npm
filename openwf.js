@@ -16,7 +16,7 @@ switch (tool) {
 			}
 
 			const fs = require("node:fs");
-			const { getVersions, getVersionType, getShortId, downloadFile, downloadUpdatePatch } = require("./lib.js");
+			const { getVersions, getVersionType, getShortId, TOOLS_REPLACEMENTS, downloadFile, downloadFileFromMega, downloadUpdatePatch } = require("./lib.js");
 
 			let isFresh = !fs.existsSync("manifests/versions.html");
 			if (isFresh) {
@@ -58,7 +58,7 @@ switch (tool) {
 
 			if (type == "steam" || type == "patch") {
 				const ContentManifest = require("lean-and-mean-steam-user/components/content_manifest");
-				const { fetchManifest, fetchDepotKey, downloadAndInstall, DEFAULT_HOSTS }  = require("steam-manifest-tools");
+				const { fetchManifest, fetchDepotKey, downloadAndInstall, DEFAULT_HOSTS, sha1file }  = require("steam-manifest-tools");
 
 				console.log(`Fetching manifest...`);
 				const manifestId = type == "patch" ? version.attributes.base_manifest : version.id;
@@ -90,6 +90,17 @@ switch (tool) {
 					DEFAULT_HOSTS,
 					`install/${target}`
 				);
+
+				if (version.id in TOOLS_REPLACEMENTS) {
+					const toolsReplacement = TOOLS_REPLACEMENTS[version.id];
+					console.log(`Fetching Tools replacement...`);
+					if (!fs.existsSync(`depot/${toolsReplacement.name}`) || await sha1file(`depot/${toolsReplacement.name}`) != toolsReplacement.sha1) {
+						await downloadFileFromMega(toolsReplacement.mega, `depot/${toolsReplacement.name}`);
+					}
+					console.log(`Applying Tools replacement...`);
+					const sz = require("7zip-min");
+					await sz.unpack(`depot/${toolsReplacement.name}`, `install/${target}`);
+				}
 			} else {
 				console.log(`Version type (${type}) not yet supported.`);
 				process.exit(1);

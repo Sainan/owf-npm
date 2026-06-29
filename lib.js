@@ -43,6 +43,36 @@ const getShortId = (version) => {
 	return version.id;
 };
 
+
+/*interface IToolsReplacement {
+	name: string;
+	sha1: string;
+	mega: string;
+}*/
+
+const TOOLS_m2275730668734249647/*: IToolsReplacement*/ = {
+	name: "Tools folder from 2015.10.21.12.48.7z",
+	sha1: "0e7a13ce07cf83db22c68182d69d76ab050a8514",
+	mega: "https://mega.nz/file/1gAFzTaI#rjrzbZce6zTSprDzc92glCHVlXC55RoFzAcsKeR8VFM",
+};
+
+const TOOLS_REPLACEMENTS/*: Record<string, IToolsReplacement>*/ = {
+	"7055925076570413672": TOOLS_m2275730668734249647,
+	"232461576962714068": TOOLS_m2275730668734249647,
+	"567734397704178704": TOOLS_m2275730668734249647,
+	"5952644847955190118": TOOLS_m2275730668734249647,
+	"7377933404197762308": TOOLS_m2275730668734249647,
+	"6368936033089773713": TOOLS_m2275730668734249647,
+	"1212629036031221707": TOOLS_m2275730668734249647,
+	"1048315274024428186": TOOLS_m2275730668734249647,
+	"6636116079410913663": TOOLS_m2275730668734249647,
+	"4885795964507366541": TOOLS_m2275730668734249647,
+	"7887393592947262939": TOOLS_m2275730668734249647,
+	"8779732662024957928": TOOLS_m2275730668734249647,
+	"7091405412400346572": TOOLS_m2275730668734249647,
+};
+
+
 const downloadFile = async (url, out) => {
 	const { Readable } = require("node:stream");
 	const { body } = await fetch(url);
@@ -118,4 +148,5 @@ const downloadUpdatePatch = async (version, btConsent) => {
 	}
 };
 
-module.exports = { getVersions, getVersionType, getShortId, downloadFile, downloadFileFromMega, verifyLocalTorrentDownload, downloadUpdatePatch };
+
+module.exports = { getVersions, getVersionType, getShortId, TOOLS_REPLACEMENTS, downloadFile, downloadFileFromMega, verifyLocalTorrentDownload, downloadUpdatePatch };
